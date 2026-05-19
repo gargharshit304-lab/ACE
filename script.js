@@ -238,7 +238,6 @@ el.newChat.addEventListener('click', ()=>{
 });
 
 // Initialize with a friendly system message
-pushMessage('ai', 'Hello! I\'m your AI assistant. Ask me anything.');
-
+// Do not add sample messages — keep the UI clean and empty.
 // Accessibility: focus input on load
 el.input.focus();
