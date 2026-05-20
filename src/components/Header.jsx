@@ -1,0 +1,30 @@
+import { Menu, Sparkles } from 'lucide-react';
+
+export default function Header({ status, hasMessages, onToggleSidebar }) {
+  return (
+    <header className="flex items-center justify-between border-b border-white/5 bg-black/80 px-4 py-4 backdrop-blur-xl sm:px-6 lg:px-8">
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/80 transition hover:border-white/20 hover:bg-white/10 lg:hidden"
+          aria-label="Toggle sidebar"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/35">Conversation</p>
+          <h1 className="text-lg font-semibold text-white sm:text-xl">ChatGPT-style workspace</h1>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 rounded-full border border-white/5 bg-white/[0.03] px-4 py-2 text-sm text-white/60">
+        <Sparkles className="h-4 w-4 text-white/50" />
+        <span>{hasMessages ? 'Active chat' : 'Ready to start'}</span>
+        <span className="hidden h-1 w-1 rounded-full bg-white/30 sm:inline-block" />
+        <span className="hidden sm:inline">{status}</span>
+      </div>
+    </header>
+  );
+}
