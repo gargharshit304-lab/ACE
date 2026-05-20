@@ -8,6 +8,7 @@ const messages = [];
 const el = {
   chatsList: document.getElementById('chatsList'),
   messages: document.getElementById('messages'),
+  emptyState: document.getElementById('empty-state'),
   inputForm: document.getElementById('inputForm'),
   input: document.getElementById('input'),
   sendBtn: document.getElementById('sendBtn'),
@@ -23,10 +24,16 @@ function autoResize(elm){
 
 el.input.addEventListener('input', (e)=> autoResize(e.target));
 
+function syncEmptyState(){
+  if(!el.emptyState) return;
+  el.emptyState.hidden = messages.length > 0;
+}
+
 // Add message locally and render
 function pushMessage(role, content){
   const msg = { role, content, time: new Date().toLocaleTimeString() };
   messages.push(msg);
+  syncEmptyState();
   renderMessage(msg);
 }
 
@@ -163,6 +170,7 @@ function removeTyping(ind){
 // Send message to backend
 async function sendMessage(text){
   // push user message immediately
+  syncEmptyState();
   pushMessage('user', text);
   el.input.value = '';
   autoResize(el.input);
@@ -186,6 +194,7 @@ async function sendMessage(text){
     removeTyping(typingNode);
     const aiMsg = {role:'ai', content:'' , time:new Date().toLocaleTimeString()};
     messages.push(aiMsg);
+    syncEmptyState();
 
     // create DOM elements for AI and then type into bubble
     const container = document.createElement('div');
@@ -246,9 +255,12 @@ el.newChat.addEventListener('click', ()=>{
   messages.length = 0;
   el.messages.innerHTML = '';
   el.chatsList.innerHTML = '<div class="empty">No previous chats — start a conversation</div>';
+  if(el.emptyState) el.messages.prepend(el.emptyState);
+  syncEmptyState();
 });
 
 // Initialize with a friendly system message
 // Do not add sample messages — keep the UI clean and empty.
 // Accessibility: focus input on load
+syncEmptyState();
 el.input.focus();
