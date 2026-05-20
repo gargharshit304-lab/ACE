@@ -30,14 +30,23 @@ function pushMessage(role, content){
   renderMessage(msg);
 }
 
+function createAvatar(role){
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+
+  if(role === 'ai'){
+    avatar.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v4M12 17v4M4.5 12h4M15.5 12h4M7.2 7.2l2.8 2.8M14 14l2.8 2.8M16.8 7.2L14 10M10 14l-2.8 2.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/></svg>';
+  } else {
+    avatar.textContent = 'U';
+  }
+
+  return avatar;
+}
+
 // Render a single message to the DOM
 function renderMessage(msg){
   const container = document.createElement('div');
   container.className = 'msg ' + (msg.role === 'user' ? 'user-msg' : 'ai-msg');
-
-  const avatar = document.createElement('div');
-  avatar.className = 'avatar';
-  avatar.textContent = msg.role === 'user' ? 'U' : 'AI';
 
   const bubble = document.createElement('div');
   bubble.className = 'bubble ' + (msg.role === 'user' ? 'user' : 'ai');
@@ -77,7 +86,9 @@ function renderMessage(msg){
   meta.innerHTML = `<span class="time">${msg.time}</span>`;
   bubble.appendChild(meta);
 
-  container.appendChild(avatar);
+  if(msg.role === 'ai'){
+    container.appendChild(createAvatar('ai'));
+  }
   container.appendChild(bubble);
   el.messages.appendChild(container);
   // animate in
@@ -135,7 +146,7 @@ async function typeReply(text, containerBubble){
 function showTyping(){
   const container = document.createElement('div');
   container.className = 'msg ai-msg typing-msg';
-  const avatar = document.createElement('div'); avatar.className='avatar'; avatar.textContent='AI';
+  const avatar = createAvatar('ai');
   const bubble = document.createElement('div'); bubble.className='bubble ai';
   bubble.innerHTML = '<span class="dots"><span></span><span></span><span></span></span>';
   container.appendChild(avatar); container.appendChild(bubble);
@@ -179,7 +190,7 @@ async function sendMessage(text){
     // create DOM elements for AI and then type into bubble
     const container = document.createElement('div');
     container.className = 'msg ai-msg';
-    const avatar = document.createElement('div'); avatar.className='avatar'; avatar.textContent='AI';
+    const avatar = createAvatar('ai');
     const bubble = document.createElement('div'); bubble.className='bubble ai';
     container.appendChild(avatar); container.appendChild(bubble);
     el.messages.appendChild(container);
