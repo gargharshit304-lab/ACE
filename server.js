@@ -1,9 +1,13 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const distPath = path.join(__dirname, 'dist');
+const hasBuiltFrontend = fs.existsSync(distPath);
 
 // Middleware
 app.use(cors());
@@ -66,9 +70,30 @@ function generateAIResponse(userMessage) {
 // Routes
 
 // Health check
-app.get('/', (req, res) => {
+app.get('/health', (req, res) => {
   res.json({ status: 'Server is running', message: 'AI Chatbot Backend is active' });
 });
+
+// Serve the built React app when available
+if (hasBuiltFrontend) {
+  app.use(express.static(distPath));
+
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/chat') || req.path.startsWith('/health')) {
+      return next();
+    }
+
+    if (req.method === 'GET') {
+      return res.sendFile(path.join(distPath, 'index.html'));
+    }
+
+    return next();
+  });
+} else {
+  app.get('/', (req, res) => {
+    res.json({ status: 'Server is running', message: 'AI Chatbot Backend is active' });
+  });
+}
 
 // Chat endpoint
 app.post('/chat', (req, res) => {
