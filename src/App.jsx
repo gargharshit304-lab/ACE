@@ -15,6 +15,20 @@ function createMessage(role, content, extra = {}) {
   };
 }
 
+function buildChatMessages(messages) {
+  return messages
+    .filter((message) => message.role === 'user' || message.role === 'assistant')
+    .map((message, index, list) => {
+      const isLatestAssistantPlaceholder = message.role === 'assistant' && index === list.length - 1 && message.content === 'ACE is thinking...';
+
+      return {
+        role: message.role,
+        content: isLatestAssistantPlaceholder ? '' : message.content
+      };
+    })
+    .filter((message) => message.content !== '' || message.role === 'user');
+}
+
 export default function App() {
   const [messages, setMessages] = useState([]);
   const [status, setStatus] = useState('ACE ready');
@@ -140,14 +154,16 @@ export default function App() {
     setIsTyping(true);
 
     try {
-      const response = await fetch('/api/ollama/generate', {
+      const conversation = buildChatMessages([...messages, userMessage]);
+
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           model: selectedModel,
-          prompt: trimmed,
+          messages: conversation,
           stream: true
         })
       });
@@ -182,19 +198,22 @@ export default function App() {
             continue;
           }
 
-          if (parsed.response) {
+          const chunkText = parsed?.message?.content || parsed?.response || '';
+
+          if (chunkText) {
             if (!accumulated) {
               updateAssistantMessage(assistantId, '');
             }
-            accumulated += parsed.response;
+            accumulated += chunkText;
             updateAssistantMessage(assistantId, accumulated);
           }
         }
       }
 
       const finalChunk = parseStreamChunk(buffer);
-      if (finalChunk?.response) {
-        accumulated += finalChunk.response;
+      const finalText = finalChunk?.message?.content || finalChunk?.response || '';
+      if (finalText) {
+        accumulated += finalText;
       }
 
       updateAssistantMessage(assistantId, accumulated || 'No response received from Ollama.');

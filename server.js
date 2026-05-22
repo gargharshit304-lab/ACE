@@ -113,26 +113,26 @@ app.get('/api/ollama/models', async (req, res) => {
   }
 });
 
-app.post('/api/ollama/generate', async (req, res) => {
+async function proxyOllamaChat(req, res) {
   try {
-    const { model, prompt, stream = true } = req.body || {};
+    const { model, messages, stream = true } = req.body || {};
 
     if (!model || typeof model !== 'string') {
       return res.status(400).json({ error: 'model is required' });
     }
 
-    if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
-      return res.status(400).json({ error: 'prompt is required' });
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: 'messages is required and must be a non-empty array' });
     }
 
-    const ollamaResponse = await fetchWithTimeout(`${OLLAMA_BASE_URL}/api/generate`, {
+    const ollamaResponse = await fetchWithTimeout(`${OLLAMA_BASE_URL}/api/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         model,
-        prompt,
+        messages,
         stream: stream !== false
       })
     }, 30000);
@@ -160,10 +160,13 @@ app.post('/api/ollama/generate', async (req, res) => {
 
     Readable.fromWeb(ollamaResponse.body).pipe(res);
   } catch (error) {
-    console.error('Error in /api/ollama/generate:', error);
+    console.error('Error in /api/chat:', error);
     res.status(500).json({ error: 'Internal server error', details: error.message });
   }
-});
+}
+
+app.post('/api/chat', proxyOllamaChat);
+app.post('/api/ollama/generate', proxyOllamaChat);
 
 // Serve the built React app when available
 if (hasBuiltFrontend) {
@@ -202,7 +205,7 @@ app.listen(PORT, () => {
   console.log(`🚀 AI Chatbot Backend is running on http://localhost:${PORT}`);
   console.log(`📝 Ollama status: http://localhost:${PORT}/api/ollama/status`);
   console.log(`📝 Ollama models: http://localhost:${PORT}/api/ollama/models`);
-  console.log(`📝 Ollama generate: POST http://localhost:${PORT}/api/ollama/generate`);
+  console.log(`📝 Ollama chat: POST http://localhost:${PORT}/api/chat`);
 });
 
 // Handle process termination
