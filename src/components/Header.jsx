@@ -1,7 +1,7 @@
 import { Menu, Sparkles } from 'lucide-react';
 import BrandMark from './BrandMark';
 
-export default function Header({ status, hasMessages, selectedModel, ollamaConnected, onToggleSidebar }) {
+export default function Header({ status, hasMessages, selectedModel, ollamaConnected, onToggleSidebar, activeChatTitle }) {
   return (
     <header className="flex items-center justify-between border-b border-white/5 bg-black/80 px-4 py-4 backdrop-blur-xl sm:px-6 lg:px-8">
       <div className="flex items-center gap-3">
@@ -27,7 +27,7 @@ export default function Header({ status, hasMessages, selectedModel, ollamaConne
       <div className="flex flex-wrap items-center justify-end gap-2 text-sm text-white/60">
         <div className="flex items-center gap-3 rounded-full border border-white/5 bg-white/[0.03] px-4 py-2">
           <Sparkles className="h-4 w-4 text-white/50" />
-          <span>{hasMessages ? 'Active chat' : 'ACE ready'}</span>
+          <span>{activeChatTitle || (hasMessages ? 'Active chat' : 'ACE ready')}</span>
           <span className="hidden h-1 w-1 rounded-full bg-white/30 sm:inline-block" />
           <span className="hidden sm:inline">{status}</span>
         </div>

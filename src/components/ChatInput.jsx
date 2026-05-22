@@ -26,6 +26,8 @@ export default function ChatInput({ onSend, disabled, models, selectedModel, onS
     () => models.find((model) => model.name === selectedModel),
     [models, selectedModel]
   );
+  const displayModelName = selected?.name || selectedModel || 'Select model';
+  const displayModelStatus = selected?.running ? 'Running' : selectedModel ? 'Saved' : (ollamaConnected ? 'Available' : 'Offline');
 
   const filteredModels = useMemo(() => {
     const query = searchValue.trim().toLowerCase();
@@ -73,10 +75,8 @@ export default function ChatInput({ onSend, disabled, models, selectedModel, onS
           >
             <Cpu className="h-4 w-4 text-white/65" />
             <span className="flex min-w-0 flex-col leading-tight">
-              <span className="truncate">{selected?.name || 'Select model'}</span>
-              <span className="text-[11px] uppercase tracking-[0.22em] text-white/40">
-                {selected?.running ? 'Running' : ollamaConnected ? 'Available' : 'Offline'}
-              </span>
+              <span className="truncate">{displayModelName}</span>
+              <span className="text-[11px] uppercase tracking-[0.22em] text-white/40">{displayModelStatus}</span>
             </span>
             <span className={['h-2 w-2 rounded-full', selected?.running ? 'bg-emerald-400' : ollamaConnected ? 'bg-white/30' : 'bg-rose-400'].join(' ')} />
             <ChevronDown className={['h-4 w-4 text-white/45 transition-transform', selectorOpen ? 'rotate-180' : ''].join(' ')} />
