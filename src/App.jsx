@@ -88,6 +88,7 @@ export default function App() {
 
   const activeChat = chats.find((chat) => chat.id === activeChatId) || chats[0];
   const messages = activeChat?.messages || [];
+  const resolvedModel = models.find((model) => model.name === selectedModel)?.name || models[0]?.name || '';
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -149,6 +150,8 @@ export default function App() {
 
             return nextModels[0].name;
           });
+        } else {
+          setSelectedModel('');
         }
       } catch (error) {
         if (cancelled) {
@@ -184,7 +187,7 @@ export default function App() {
   };
 
   const createNewChat = () => {
-    const nextChat = createChat('New Chat', selectedModel);
+    const nextChat = createChat('New Chat', resolvedModel);
     setChats((currentChats) => [nextChat, ...currentChats]);
     setActiveChatId(nextChat.id);
     setStatus('ACE ready');
@@ -262,7 +265,7 @@ export default function App() {
     const trimmed = text.trim();
     if (!trimmed || isTyping) return;
 
-    if (!selectedModel) {
+    if (!resolvedModel) {
       setStatus('Select a local model first');
       return;
     }
@@ -276,12 +279,12 @@ export default function App() {
       return renameChatFromMessages({
         ...chat,
         updatedAt: Date.now(),
-        model: selectedModel,
+        model: resolvedModel,
         messages: nextMessages
       }, nextMessages);
     });
 
-    setStatus(`Generating with ${selectedModel}`);
+    setStatus(`Generating with ${resolvedModel}`);
     setIsTyping(true);
 
     try {
@@ -293,7 +296,7 @@ export default function App() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: selectedModel,
+          model: resolvedModel,
           messages: conversation,
           stream: true
         })
@@ -348,7 +351,7 @@ export default function App() {
       }
 
       updateAssistantMessage(assistantId, accumulated || 'No response received from Ollama.');
-      setStatus(`${selectedModel} ready`);
+      setStatus(`${resolvedModel} ready`);
     } catch (error) {
       updateAssistantMessage(assistantId, `Error: ${error.message}`);
       setStatus('ACE connection error');
@@ -390,9 +393,9 @@ export default function App() {
 
           <ChatInput
             onSend={sendMessage}
-            disabled={isTyping || !selectedModel}
+            disabled={isTyping || !resolvedModel}
             models={models}
-            selectedModel={selectedModel}
+            selectedModel={resolvedModel || selectedModel}
             onSelectModel={selectModelForActiveChat}
             ollamaConnected={ollamaConnected}
           />

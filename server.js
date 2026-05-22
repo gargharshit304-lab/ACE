@@ -113,6 +113,15 @@ app.get('/api/ollama/models', async (req, res) => {
   }
 });
 
+function messagesToPrompt(messages) {
+  return messages
+    .map((message) => {
+      const label = message.role === 'assistant' ? 'Assistant' : 'User';
+      return `${label}: ${message.content}`;
+    })
+    .join('\n\n') + '\n\nAssistant:';
+}
+
 async function proxyOllamaChat(req, res) {
   try {
     const { model, messages, stream = true } = req.body || {};
@@ -125,17 +134,34 @@ async function proxyOllamaChat(req, res) {
       return res.status(400).json({ error: 'messages is required and must be a non-empty array' });
     }
 
-    const ollamaResponse = await fetchWithTimeout(`${OLLAMA_BASE_URL}/api/chat`, {
+    const chatPayload = {
+      model,
+      messages,
+      stream: stream !== false
+    };
+
+    let ollamaResponse = await fetchWithTimeout(`${OLLAMA_BASE_URL}/api/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        model,
-        messages,
-        stream: stream !== false
-      })
+      body: JSON.stringify(chatPayload)
     }, 30000);
+
+    if (ollamaResponse.status === 404) {
+      const prompt = messagesToPrompt(messages);
+      ollamaResponse = await fetchWithTimeout(`${OLLAMA_BASE_URL}/api/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model,
+          prompt,
+          stream: stream !== false
+        })
+      }, 30000);
+    }
 
     if (!ollamaResponse.ok) {
       const message = await readTextResponse(ollamaResponse);
